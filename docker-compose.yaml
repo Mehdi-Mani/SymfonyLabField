@@ -1,0 +1,51 @@
+version: "3"
+services:
+  client:
+    build:
+      context: ./client
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    ports:
+      - 3000:3000
+      - 3001:3001
+    # Add any additional configuration for the client service here
+
+  database:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: api
+    volumes:
+      - database:/var/lib/postgresql/data
+    # Add any additional configuration for the PostgreSQL service here
+
+  api:
+    depends_on:
+      - database
+    build:
+      context: ./api
+    ports:
+      - 9000:9000
+    volumes:
+      - ./api:/var/www/html
+      - ./logs/symfony:/app/var/log:cached
+
+  nginx:
+    depends_on:
+      - api
+    build:
+      context: ./nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./api:/var/www/html
+
+    # Add any additional configuration for the Nginx service here
+
+volumes:
+  database:
